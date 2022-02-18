@@ -158,7 +158,7 @@ func _on_TileMap_flag_placed_removed(value):
 func _on_TileMap_game_over():
 	endgame_label.text = "Game Over!"
 	endgame_label.show()
-
+	game_over = true
 
 func _on_TileMap_game_won():
 	endgame_label.text = "Game Won!"
