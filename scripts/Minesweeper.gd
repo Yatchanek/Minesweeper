@@ -172,3 +172,4 @@ func _on_TileMap_place_label(pos, text):
 	label_container.add_child(label)
 	label.rect_position = pos
 	label.text = text
+	label.modulate = label_color
