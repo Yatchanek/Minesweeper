@@ -1,0 +1,1 @@
+A minesweeper game made with the Godot Engine as coding practice.
