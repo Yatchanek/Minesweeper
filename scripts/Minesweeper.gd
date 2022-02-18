@@ -60,7 +60,7 @@ func start_game():
 	if cell_size.x * grid_size.x > 860 and grid_size.x > grid_size.y:
 		ratio = 860 / (cell_size * grid_size.x)		
 	  
-	position = Vector2(0, 40) + Vector2((900 - cell_size.x * grid_size.x * ratio) / 2, (860 - cell_size.y * grid_size.y * ratio) / 2)
+	position = Vector2(0, 40) + Vector2((get_viewport().size.x - cell_size.x * grid_size.x * ratio) / 2, (get_viewport().size.y - 40 - cell_size.y * grid_size.y * ratio) / 2)
 	scale = Vector2(ratio, ratio)
 	
 	if skill_level > 0:
