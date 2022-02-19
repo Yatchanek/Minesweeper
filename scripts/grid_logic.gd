@@ -121,7 +121,7 @@ func check_for_win():
 	if flag_count > 0:
 		return false
 	for cell in get_used_cells():
-		if get_cellv(cell) == 0:
+		if get_cellv(cell) == 0 or get_cellv(cell) == 4:
 			return false
 	for mine in mine_positions:
 		if !flag_positions.has(mine):
