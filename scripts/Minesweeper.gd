@@ -68,15 +68,15 @@ func _ready():
 
 func save_data():
 	var f = File.new()
-	f.open("user://higscore.dat", File.WRITE)
+	f.open("./higscore.dat", File.WRITE)
 	var data = var2str(best_times)
 	f.store_string(data)
 	f.close()
 
 func load_data():
 	var f = File.new()
-	if f.file_exists("user://higscore.dat"):
-		f.open("user://higscore.dat", File.READ)
+	if f.file_exists("./higscore.dat"):
+		f.open("./higscore.dat", File.READ)
 		var data = f.get_as_text()
 		best_times = str2var(data)
 		f.close()
