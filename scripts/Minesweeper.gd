@@ -10,6 +10,13 @@ onready var color_popup = $HUD/Menu/ColorPicker
 onready var color_selector = $HUD/Menu/ColorPicker/Panel/MarginContainer/ColorSelect
 onready var max_mines_input = $HUD/Menu/CustomGridSize/Panel/MarginContainer/VBoxContainer/VBoxContainer2/MaxMines
 onready var flag_label = $HUD/Menu/FlagLabel
+onready var menu = $HUD/Menu
+onready var beginner_time_label = $HUD/Menu/BestTimes/Panel/MarginContainer/GridContainer/BeginnerTimeLabel
+onready var intermediate_time_label = $HUD/Menu/BestTimes/Panel/MarginContainer/GridContainer/IntermediateTimeLabel
+onready var expert_time_label = $HUD/Menu/BestTimes/Panel/MarginContainer/GridContainer/ExpertTimeLabel
+onready var hall_of_fame = $HUD/Menu/BestTimes
+onready var x_size_button = $HUD/Menu/CustomGridSize/Panel/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/X
+onready var y_size_button = $HUD/Menu/CustomGridSize/Panel/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/Y
 
 var number_label = preload("res://scenes/number_label.tscn")
 var explosion = preload("res://scenes/explosion.tscn")
@@ -22,9 +29,16 @@ var label_color = Color(0.1, 0.1, 0.1)
 var mine_count
 var custom_mine_count
 var game_over = false
+var game_won = false
 var in_menu = false
 var skill_level = 1
 var in_game = false
+
+var best_times = {
+	1: 5940, 
+	2: 5940, 
+	3: 5940
+	}
 
 func _unhandled_input(event):
 	if in_menu:
@@ -37,7 +51,6 @@ func _unhandled_input(event):
 				start_game()
 			else:
 				tilemap.handle_click(cell)
-				
 		if event.button_index == BUTTON_RIGHT:
 			if game_over:
 				return
@@ -51,7 +64,23 @@ func _ready():
 	options_menu.get_popup().mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for color_rect in color_selector.get_children():
 		color_rect.get_node("Button").connect("pressed", self, "_on_Color_selected", [color_rect.get_node("Button")])
-	
+	load_data()
+
+func save_data():
+	var f = File.new()
+	f.open("user://higscore.dat", File.WRITE)
+	var data = var2str(best_times)
+	f.store_string(data)
+	f.close()
+
+func load_data():
+	var f = File.new()
+	if f.file_exists("user://higscore.dat"):
+		f.open("user://higscore.dat", File.READ)
+		var data = f.get_as_text()
+		best_times = str2var(data)
+		f.close()
+		
 func start_game():
 	var ratio = 1.0
 	if cell_size.y * grid_size.y > 840:
@@ -77,6 +106,8 @@ func start_game():
 	endgame_label.hide()
 	in_game = true
 	game_over = false
+	game_won = false
+	menu.start()
 	
 func _on_File_menu_pressed(id):
 	match id:
@@ -108,6 +139,9 @@ func _on_Options_menu_pressed(id):
 			skill_level = 0
 		5:
 			color_popup.popup()
+			in_menu = true
+		6:
+			hall_of_fame.popup()
 			in_menu = true
 
 func _on_X_value_changed(value):
@@ -143,9 +177,12 @@ func _on_Color_selected(button):
 	in_menu = false
 
 func _on_CustomGridSize_about_to_show():
+	x_size_button.value = custom_grid_size.x
+	y_size_button.value = custom_grid_size.x
 	max_mines_input.min_value = ceil(custom_grid_size.x * custom_grid_size.y * 0.1)
 	max_mines_input.max_value = ceil(custom_grid_size.x * custom_grid_size.y * 0.33)
-	custom_mine_count = ceil(custom_grid_size.x * custom_grid_size.y * 0.15)
+	if custom_mine_count == null:
+		custom_mine_count = ceil(custom_grid_size.x * custom_grid_size.y * 0.15)
 	max_mines_input.value = custom_mine_count
 
 func _on_MaxMines_value_changed(value):
@@ -159,13 +196,16 @@ func _on_TileMap_game_over():
 	endgame_label.text = "Game Over!"
 	endgame_label.show()
 	game_over = true
+	in_game = false
+	menu.stop()
 
 func _on_TileMap_game_won():
 	endgame_label.text = "Game Won!"
 	endgame_label.show()
 	game_over = true
 	in_game = false
-
+	game_won = true
+	menu.stop()
 
 func _on_TileMap_place_label(pos, text):
 	var label = number_label.instance()
@@ -173,3 +213,28 @@ func _on_TileMap_place_label(pos, text):
 	label.rect_position = pos
 	label.text = text
 	label.modulate = label_color
+
+func _on_Menu_time_stopped(time):
+	if skill_level == 0 or !game_won:
+		return
+	if time < best_times[skill_level]:
+		best_times[skill_level] = time
+		save_data()
+
+func _on_BestTimes_about_to_show():
+	var beginner_time = best_times[1]
+	var intermediate_time = best_times[2]
+	var expert_time = best_times[3]
+	
+	beginner_time_label.text = "%02d:%02d" % format_time(beginner_time)
+	intermediate_time_label.text = "%02d:%02d" % format_time(intermediate_time)
+	expert_time_label.text = "%02d:%02d" % format_time(expert_time)
+
+func format_time(time):
+	var minutes = time / 60
+	var seconds = time % 60
+	return [minutes, seconds]
+
+func _on_Hall_of_fame_Button_pressed():
+	hall_of_fame.hide()
+	in_menu = false
